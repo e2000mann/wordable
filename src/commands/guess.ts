@@ -6,29 +6,41 @@ const dictionary = checkWord('en')
 
 const word = 'seven'
 
+const constraintsHit = (guess: string) : string | undefined => {
+  if (guess.length !== 5) {
+    return 'Word should be 5 letters long';
+  }
+
+  if (!guess.match(/[a-z]{5}/)) {
+    return 'Not a word';
+  }
+
+  //TODO: look into reliability
+  if (!dictionary.check(guess.toLowerCase())) {
+    return 'Not in word list';
+  }
+
+  if (guess === word) {
+    return 'Correct!';
+  }
+
+  return undefined;
+}
+
 const command: Command = new Command(
+  //TODO: get command to show guess parameter
   new SlashCommandBuilder()
     .setName('guess')
     .setDescription('Make a guess')
-    .addStringOption(option => option.setName('guess').setDescription('Your 5-letter guess').setRequired(true)), // not sure how to get the command to show the guess parameter :/
+    .addStringOption(option => option.setName('guess').setDescription('Your 5-letter guess').setRequired(true)),
 
   // may want to extract this into a separate function since it might get quite big
   async interaction => {
-    let guess = interaction.options.get('guess').value
+    let guess: string = interaction.options.get('guess').value as string;
 
-    // guess constraints:
-    // must be a string
-    if (typeof guess !== 'string')
-      return await interaction.reply({ content: 'Not a word', ephemeral: true })
-    // must be 5 letters long
-    if (guess.length !== 5)
-      return await interaction.reply({ content: 'Word should be 5 letters long', ephemeral: true })
-    // must be a word in the dictionary (might be worth looking into the reliability of this)
-    if (!dictionary.check(guess.toLowerCase()))
-      return await interaction.reply({ content: 'Not in word list', ephemeral: true })
-
-    if (guess === word)
-      return await interaction.reply({ content: 'Correct!', ephemeral: true })
+    if (constraintsHit(guess)) {
+      return await interaction.reply({content: constraintsHit(guess), ephemeral: true});
+    }
 
     const letters = word.split('') // we split it so we can remove letters as we go (so extra letters in the guess don't count already counted letters)
     const response = guess.split('').reduce((acc, letter, i) => {
